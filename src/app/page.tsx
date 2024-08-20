@@ -13,13 +13,13 @@ export default function Login() {
 
   useEffect(() => { 
     const loadData = async () => {
-      const response = await fetch('http://localhost:8080/test', {method : 'GET'})
-      console.log(await response.json())
+      await fetch('http://localhost:8080/test', {method : 'GET'})
     }
     loadData();
   }, [] )
 
   async function handleLoginClick() {
+
     if(id === "") {
       return alert("아이디를 적으세요.")
     }
@@ -31,48 +31,46 @@ export default function Login() {
 
         //아이디 유무 검사
         try{
-          const response = await fetch('http://localhost:8080/test', {method : 'POST' , 
+          const response = await fetch('http://localhost:8080/test/login', {method : 'POST' , 
             headers: {"Content-Type": "application/json",},
             body : JSON.stringify({id : id, password : password}),
           })
-          if(!response.ok) {
-            if (password === password) //비밀번호 비교를 같은거 끼리 하는데 그 에러 고치기, 앞에 아이디가 원래 DB에 있는지 확인을 할려하는데 그걸 어떻게 해야하는지
-            {
-              alert("로그인 성공")
-              router.push('/')
-            } else {
-              return alert("비밀번호가 일치하지 않습니다.")
-            }
+          if(await response.json() === 1) {
+            alert("로그인 성공")
+            router.push('./todo') //게시판 이동
+          } else if (await response.json() === 2) {
+            alert("비밀번호가 일치하지 않습니다.")
+          } else if (await response.json() === 3) {
+            alert("아이디가 존재하지 않거나 다른 오류가 발생했습니다.")
           }
-          console.log("결과 값: " + await response.json())
         } catch (error) {
-            alert("error (존재하지 않는 아이디이거나 그 밖의 오류)")
-            console.error("Error fetching data", error);
+          alert("error")
+          console.error("Error fetching data", error);
         }
       }
     }
   }
   
   return (
-    <div>
-      <div>
-        <h1><b>로그인</b></h1>
-          <div className="flex-col flex">
+    <div className="bg-orange-custom-1 flex justify-center min-h-screen items-center">
+      <div className="bg-red-custom-1 boxborder rounded-3xl w-120 h-152  grid place-items-center">
+          <h1 className="text-white font-bold text-7xl w-56">로그인</h1>
+          <div className="flex-col flex w-32 space-y-5">
             <input
+              className="rounded text-center"
               type="text"
               placeholder="id"
               value={id}
               onChange={(e) => setId(e.target.value)} />
             <input
+              className="rounded text-center"
               type="password"
               placeholder="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}/>
           </div>
-      </div>
-      <div className="flex-col flex">
-        <button className="flex" onClick={handleLoginClick}>로그인</button>
-        <Link href="./signup">회원가입</Link>
+        <button className="w-24 text-3xl bg-black-custom-1 text-white rounded" onClick={handleLoginClick}>로그인</button>
+        <Link className="w-26 text-3xl bg-black-custom-1 text-white rounded" href="./signup">회원가입</Link>
       </div>
     </div>
   );

@@ -14,8 +14,7 @@ export default function SignIn() {
 
   useEffect(() => { 
     const loadData = async () => {
-      const response = await fetch('http://localhost:8080/test', {method : 'GET'})
-      console.log(await response.json())
+      await fetch('http://localhost:8080/test', {method : 'GET'})
     }
     loadData();
   }, [] )
@@ -30,11 +29,12 @@ export default function SignIn() {
       }
       if (password === confirmPassword) {
         try{
-          const response = await fetch('http://localhost:8080/test', {method : 'POST' , 
-            headers: {"Content-Type": "application/json",},       
+          const response = await fetch('http://localhost:8080/test/sign-up', {method : 'POST' , 
+            headers: {"Content-Type": "application/json",},
             body : JSON.stringify({id : id, password : password}),
           })
           console.log(await response.json())
+          return alert(JSON.stringify(await response.json()))
         } catch (error) {
             alert("error")
             console.error("Error fetching data", error);
@@ -48,31 +48,32 @@ export default function SignIn() {
   }
 
   return (
-    <div>
-      <div>
-        <h1><b>회원가입</b></h1>   
-          <div className="flex-col flex">
+    <div className="bg-orange-custom-1 flex justify-center min-h-screen items-center">
+      <div className="bg-red-custom-1 boxborder rounded-3xl w-120 h-152  grid place-items-center">
+        <h1 className="text-white font-bold text-7xl w-62">회원가입</h1>   
+          <div className="flex-col flex w-36 space-y-5">
             <input 
+              className="rounded text-center"
               type="text" 
-              placeholder="아이디"
+              placeholder="id"
               value={id}
               onChange={(e) => setId(e.target.value)} />
             <input 
+              className="rounded text-center"
               type="password" 
-              placeholder="비밀번호"
+              placeholder="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)} />
             <input 
+              className="rounded text-center"
               type="password" 
-              placeholder="비밀번호 확인"
+              placeholder="password comfirm"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
+        <button className="w-26 text-3xl bg-black-custom-1 text-white rounded" onClick={handleSignClick}>가입 하기</button>
+        <Link className="w-26 text-3xl bg-black-custom-1 text-white rounded" href="/">뒤로 가기</Link>
         </div>
-        <div className="flex-col flex">
-        <button onClick={handleSignClick}>가입 하기</button>
-        <Link href="/">뒤로 가기</Link>
-      </div>
     </div>
   );
 }
