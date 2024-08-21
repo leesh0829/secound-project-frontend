@@ -14,6 +14,8 @@ const config: Config = {
         current : 'currentColor',
         'white' : '#ffffff',
         'red-custom-1': '#B95050',
+        'red-custom-2' : '#EB5A5A',
+        'red-custom-3' : '#945050',
         'orange-custom-1' : '#D7AC87',
         'black-custom-1' : '#282828',
       },
