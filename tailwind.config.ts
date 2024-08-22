@@ -15,9 +15,11 @@ const config: Config = {
         'white' : '#ffffff',
         'red-custom-1': '#B95050',
         'red-custom-2' : '#EB5A5A',
-        'red-custom-3' : '#945050',
+        'red-custom-3' : '#AA3E3E',
         'orange-custom-1' : '#D7AC87',
+        'orange-custom-2' : '#D7AC87',
         'black-custom-1' : '#282828',
+        'green-custom-1' : '#c8e3b2',
       },
       aspectRatio: {
         '1/2' : '1 / 2',
@@ -26,10 +28,12 @@ const config: Config = {
         '025': '0.25',
       },
       width: {
+        '110' : '27.5rem',
         '120' : '30rem',
         '128' : '32rem',
       },
       height: {
+        '4.5' : '1.175rem',
         '152' : '48rem',
       },
       backgroundImage: {
