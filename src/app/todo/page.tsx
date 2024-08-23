@@ -23,6 +23,7 @@ const month : number = today.getMonth() + 1;
 const day : number = today.getDate();
 const hour : number = today.getHours();
 const min : number = today.getMinutes();
+var monthFilter : number = 8;
 
 export default function Todo() {
 
@@ -37,38 +38,35 @@ export default function Todo() {
   const [activeListButton, setActiveListButton] = useState(false)
   const [isCheckboxChecked, setIsCheckboxChecked] = useState(false)
   const [content, setContent] = useState("")
+  const [addList, setAddList] = useState(false)
 
-  const toggleList = () => {
-    if (activeListButton) {
-      setActiveListButton(false);
+  const toggleAddList = () => {
+    if(addList) {
+      setAddList(false);
     } else {
-      setActiveListButton(true);
+      setAddList(true);
     }
-  };
+  }
 
-  /* useEffect(() => { 
+  useEffect(() => { 
     const loadData = async () => {
-      const response =  await fetch('http://localhost:8080/time', {method : 'POST', 
-        headers: {"Content-Type": "application/json",},
-        body : JSON.stringify({time : today})
-        })
+      await fetch('http://localhost:8080/time', {method : 'GET', })
       //console.log(await response.json())
     }
     loadData();
-  }, [] ) */
+  }, [] )
 
   async function PostList() {
-    useEffect(() => { 
-      const loadData = async () => {
-        await fetch('http://localhost:8080/time', {method : 'POST',
-          headers: {"Content-Type": "application/json",},
-          body: JSON.stringify({time : today, month : month})
-        })
-      }
-      loadData();
-    }, [] )
+    try {
+      const response = await fetch('http://localhost:8080/time', {method : 'POST',
+        headers: {"Content-Type": "application/json",},
+        body: JSON.stringify({time : today, month : month, content : content}),
+      })
+      console.log(await response.json())
+    } catch(err) {
+      console.error(err)
+    }
   }
-
 
   return(
     <div className="bg-orange-custom-1 flex justify-center min-h-screen items-center">
@@ -89,16 +87,17 @@ export default function Todo() {
             }} className={activeButton === 'all' ? onAll : offAll}>ALL</button>
           <button onClick={() => setActiveButton('active')} className={activeButton === 'active' ? onActive : offActive}>ACTIVE</button>
           <button onClick={() => setActiveButton('completed')} className={activeButton === 'completed' ? onComplated : offComplated}>COMPLETED</button>
-          <button className="rounded-md bg-black-custom-1 text-white w-20 ml-20 mr-3" 
-            onClick={() => {
-              PostList();
-            }}>Add</button>
+          <button className="rounded-md bg-black-custom-1 text-white w-20 ml-20 mr-3" onClick={() => toggleAddList()}>Add</button>
         </div>
         <div className="flex text-center gird place-content-center mt-7 pl-36">
           <div className="flex">
-            <button className="rounded-md bg-black-custom-1 text-white w-10 h-10 text-3xl">&lt;</button>
-            <text className="text-white text-3xl ml-2">{month}월</text>
-            <button className="rounded-md bg-black-custom-1 text-white w-10 h-10 text-3xl ml-2">&gt;</button>
+            <button className="rounded-md bg-black-custom-1 text-white w-10 h-10 text-3xl" onClick={() => {
+              monthFilter--;
+            }}>&lt;</button>
+            <text className="text-white text-3xl ml-2">{monthFilter}월</text>
+            <button className="rounded-md bg-black-custom-1 text-white w-10 h-10 text-3xl ml-2" onClick={() => {
+              monthFilter++;
+            }}>&gt;</button>
           </div>
           <div className="pl-16">
             <label className="relative inline-flex items-center cursor-pointer">
@@ -111,20 +110,27 @@ export default function Todo() {
           </div>
         </div>
           <div className="gird place-items-center mt-7 ml-5">
-            <button className={`w-110 h-14 rounded-lg mt-4 
-              ${isCheckboxChecked ? 'bg-green-custom-1' : `bg-orange-custom-1`}
-              ${activeListButton ? `bg-orange-100` : `bg-orange-custom-1`}
-              `} onClick={() => toggleList()}>
+            {addList && (
+              <div>
+                <button className={`w-110 h-14 rounded-lg mt-4 bg-orange-custom-1`}></button>
+                <div className={"w-120 -mt-14 ml-2 flex"}>
+                  <input type="text" className="w-70 rounded text-center border border-black-custom-1" value={content} onChange={(e) => setContent(e.target.value)}/>
+                  <button className="rounded-xl w-16 h-10 ml-2 bg-green-600 text-white" onClick={PostList}>추가</button>
+                  <button className="rounded-xl w-16 h-10 ml-2 bg-red-600 text-white" onClick={() => setAddList(true)}>취소</button>
+                </div>
+              </div>
+            )}
+            <button className={`w-110 h-14 rounded-lg mt-4 ${isCheckboxChecked ? `bg-green-custom-1` : `bg-orange-custom-1`}`} onClick={() => setActiveListButton(true)}>
               <label className="relative inline-flex cursor-pointer mr-96">
                 <input type="checkbox" className="w-5 h-5 appearance-none checked:bg-green-300 rounded-lg border border-black-custom-1
                   checked:bg-[url('https://icnlbuaakhminucvvzcj.supabase.co/storage/v1/object/public/assets/checkbox.png')] bg-no-repeat bg-center bg-white" onChange={() => setIsCheckboxChecked(!isCheckboxChecked)}/>
               </label>
               {activeListButton && (
-                  <div className={"w-80 -mt-5 ml-14 flex"}>
-                    <input type="text" className="rounded text-center border border-black-custom-1" value={content} onChange={(e) => setContent(e.target.value)}/>
-                    <button className="rounded w-14 h-10 ml-2 bg-green-600 text-white">수정</button>
-                    <button className="rounded w-14 h-10 ml-2 bg-red-600 text-white">삭제</button>
-                  </div>
+                <div className={"w-120 -mt-7 ml-16 flex"}>
+                  <input type="text" className="rounded text-center border border-black-custom-1" onChange={(e) => setContent(e.target.value)}/>
+                  <button className="rounded-xl w-16 h-10 ml-2 bg-green-600 text-white">수정</button>
+                  <button className="rounded-xl w-16 h-10 ml-2 bg-red-600 text-white" onClick={() => setActiveListButton(false)}>삭제</button>
+                </div>
               )}
             </button>
           </div>
