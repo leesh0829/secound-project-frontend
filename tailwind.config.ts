@@ -17,7 +17,7 @@ const config: Config = {
         'red-custom-2' : '#EB5A5A',
         'red-custom-3' : '#AA3E3E',
         'orange-custom-1' : '#D7AC87',
-        'orange-custom-2' : '#D7AC87',
+        'orange-custom-2' : '#847266',
         'black-custom-1' : '#282828',
         'green-custom-1' : '#c8e3b2',
       },
