@@ -29,12 +29,14 @@ const config: Config = {
       },
       width: {
         '70' : '17.5rem',
+        '100' : '25rem',
         '110' : '27.5rem',
         '120' : '30rem',
         '128' : '32rem',
       },
       height: {
         '4.5' : '1.175rem',
+        '90' : '22.5rem',
         '152' : '48rem',
       },
       backgroundImage: {
