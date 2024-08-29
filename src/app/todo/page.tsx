@@ -28,25 +28,21 @@ export default function Todo() {
   const notChecked = "visible bg-orange-custom-1 hover:bg-orange-custom-2";
   const Checked = "visible bg-green-custom-1";
 
-  const [activeButton, setActiveButton] = useState<'all' | 'active' | 'completed'>('all')
-  const [checkState, setCheckState] = useState<"all" | "ACTIVE" | "COMPLETED">("all")
-  const [isCheckboxChecked, setIsCheckboxChecked] = useState(false)
+  const [activeButton, setActiveButton] = useState<'ALL' | 'ACTIVE' | 'COMPLETED'>('ALL')
   const [content, setContent] = useState("")
   const [addList, setAddList] = useState(false)
   const [monthFilter, setMonthFillter] = useState<number>(month)
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [checkedIndex, setCheckedIndex] = useState<number | null>(null);
-  const [dbContent, setDBContent] = useState<string[]>([])
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [dbContent, setDBContent] = useState<{id : number, check : number, content : string, clock : Date, month : number}[]>([])
   const [dbIndex, setDBIndex] = useState<number[]>([])
-  const [dbData, setDBData] = useState<string[]>([])
   const [sortingState, setSortingState] = useState< "desc"| "asc">("desc");
   const [updateLists, setUpdateLists] = useState(false)
   const [toggleBtn, setToggleBtn] = useState(false)
-  const [descState, setDescState] = useState(false)
+  const [editState, setEditState] = useState<boolean[]>([]);
   let fetchMonthFilter = monthFilter;
 
   const addToList = (value: string) => {
-    setDBContent([...dbContent, value]);
+    setDBContent([...dbContent, { id : -1 , content : value, check : 0, clock  : new Date(), month : 0}]);
   }
 
   const toggleAddList = () => {
@@ -61,112 +57,95 @@ export default function Todo() {
     if(toggleBtn) {
       setSortingState('desc');
       setToggleBtn(false);
-      setDescState(false);
     } else {
       setSortingState('asc')
       setToggleBtn(true);
-      setDescState(true);
     }
     setUpdateLists(true);
-    Filter();
   }
 
 
   async function loadData() {
     try {
-      const response = await fetch('http://localhost:8080/time', { method: 'GET' });
+      const response = await fetch(`http://localhost:8080/time?sort=${sortingState}`, { method: 'GET' });
       const data = await response.json();
       
-      const contentArray = data.map((item: { content: string }) => item.content);
+      const contentArray = data.map((item: { content: string, id : number, month : number, clock : Date, check : number }) => item);
       
       setDBContent(contentArray);
+
+      
+      const dbData = data.map((o : any) => false)
+      setEditState(dbData)
+      setUpdateLists(true);
     } catch (error) {
       console.error('Failed to load data', error);
     }
   }
 
-  const handleEdit = (index: number) => {
-    setActiveIndex(index);
-    setContent(dbData[index])
-  };
-
-  const handleCheck = (index: number) => {
-    setCheckedIndex(index);
-  };
-
   const List = () => {
-    if(dbIndex.length === 0) {
-      return
+    let monthContent
+    if(activeButton === 'ACTIVE') {
+      monthContent = dbContent.filter((o) => o.month === monthFilter && o.check === 0)
+    } else if( activeButton === 'COMPLETED') {
+      monthContent = dbContent.filter((o) => o.month === monthFilter && o.check === 1)
+    } else {
+      monthContent = dbContent.filter((o) => o.month === monthFilter)
     }
-    dbData.length = 0;
-    for(let i=0; i<dbIndex.length; i++) { 
-      dbData[i] = dbContent[(dbIndex[i]-1)];
-    }
+
     return (
-      <div id="List">
-      {dbData.map((item, indexList) => (
-        <div key={indexList} className="relative">
-          <button
-            className={`w-110 h-14 rounded-lg mt-4  ${isCheckboxChecked ? Checked : notChecked}`} //체크를 전부 따로따로 동작되게 해야함, 체크 박스를 누르면 수정 UI가 뜨지 않아야함
-            onClick={() => {handleEdit(indexList)
-              handleCheck(indexList)}}
-          >
-            <label className="relative inline-flex cursor-pointer mr-96 ml-5">
-              <input
-                type="checkbox"
-                className="w-5 h-5 appearance-none checked:bg-green-custom-1 rounded-lg border border-black-custom-1 checked:bg-[url('https://icnlbuaakhminucvvzcj.supabase.co/storage/v1/object/public/assets/checkbox.png')] bg-no-repeat bg-center bg-white"
-                onChange={() => setIsCheckboxChecked(!isCheckboxChecked)}
-              />
-              <span className="text-xl ml-2 w-96 text-left">{item}</span>
-            </label>
-          </button>
-          {checkedIndex === indexList && ( //각 리스트의 인덱스로 따로 따로 HTML을 실행해 여기서 색을 바꿀 생각 -> 하지만 CSS(백그라운드 색) 이 덮어 씌워지지 않음
-            <div>
-              
-            </div>
-          )}
-          {activeIndex === indexList && (
-            <div className="absolute w-120 -mt-12 ml-10 flex z-10 rounded-lg">
-              <input
-                type="text"
-                className="rounded text-center border border-black-custom-1"
-                onChange={(e) => setContent(e.target.value)}
-              />
-              <button
-                className="rounded-xl w-16 h-10 ml-2 bg-green-600 text-white"
-                onClick={() => {
-                  const newList = [...dbData];
-                  newList[indexList] = content;
-                  setDBData(newList);
-                  for(let i = 0; i < newList.length; i++) {
-                    dbContent[(dbIndex[i]-1)] = newList[i];
-                  }
-                  setActiveIndex(null);
-                  UpdateList(dbIndex[indexList], content)
-                  setUpdateLists(true)
-                }}>
-                수정
-              </button>
-              <button
+      monthContent.map((o, i) => {
+        return (
+          <div key = {i}>
+            <div className={`w-110 h-14 rounded-lg mt-4  
+              ${o.check === 1 ? Checked : notChecked} items-center flex`}  onClick={() => {
+                const data = editState.map((x, y) => {
+                  return y === i ? true : x
+                })
+                setEditState(data)
+              setUpdateLists(true)
+            }}>
+            <div className="w-90 bg-black"/>
+            <input 
+              type="checkbox"
+              className="ml-4 mr-5 w-5 h-5 appearance-none rounded-lg checked:bg-green-200 border border-black-custom-1 checked:bg-[url('https://icnlbuaakhminucvvzcj.supabase.co/storage/v1/object/public/assets/checkbox.png')] bg-no-repeat bg-center bg-white"
+              onChange={() => {
+                UpdateList(o?.id ?? 0, o.content, !o.check ? 1 : 0)
+              }}
+            />
+            {editState[i] === true ? (
+              <div className="flex z-10 rounded-lg justify-center">
+                <input
+                  type="text"
+                  className="rounded text-center border border-black-custom-1"
+                  onChange={(e) => setContent(e.target.value)}
+                  defaultValue = {o.content}
+                />
+                <button
+                  className="rounded-xl w-16 h-10 ml-2 bg-green-600 text-white"
+                  onClick={() => {
+                    setEditState(editState.map((x, y) => { return y === i ? false : x}))
+                    UpdateList(o.id, content, o.check)
+                    setUpdateLists(true)
+                  }}>
+                  수정
+                </button>
+                <button
                 className="rounded-xl w-16 h-10 ml-2 bg-red-600 text-white"
                 onClick={() => {
-                  const newList = dbContent.filter((_, i) => i !== dbIndex[indexList]);
-                  setDBData(newList) 
-                  for(let i = 0; i < newList.length; i++) {
-                    dbContent[(dbIndex[i]-1)] = newList[i];
-                  }
-                  DeleteList(dbIndex[indexList])
-                  setActiveIndex(null);
+                  editState.length = 0;
+                  DeleteList(o.id)
                   setUpdateLists(true)
                 }}>
                 삭제
-              </button>
+                </button>
+              </div>
+            ) : o.content}
             </div>
-          )}
-        </div>
-      ))}
-    </div>
-    );
+          </div>
+        )
+      })
+    )
   }
 
   async function PostList() {
@@ -184,14 +163,11 @@ export default function Todo() {
     }
   }
 
-  async function UpdateList(Updateindex : number, UpdateContent : string) { 
-    if(descState === true) {
-      Updateindex = (dbContent.length - (Updateindex+1))
-    }
+  async function UpdateList(Updateindex : number, UpdateContent : string, UpdateCheck : number) { 
     try {
-      const response = await fetch('http://localhost:8080/time/update', {method : 'POST',
+      const response = await fetch('http://localhost:8080/time', {method : 'PATCH',
         headers: {"Content-Type": "application/json",},
-        body: JSON.stringify({id : Updateindex, content : UpdateContent}),
+        body: JSON.stringify({id : Updateindex, content : UpdateContent, check : UpdateCheck}),
       })
       loadData();
     } catch(err) {
@@ -201,7 +177,7 @@ export default function Todo() {
 
   async function DeleteList(Updateindex : number) {
     try {
-      const response = await fetch('http://localhost:8080/time/delete', {method : 'POST',
+      const response = await fetch('http://localhost:8080/time', {method : 'DELETE',
         headers: {"Content-Type": "application/json",},
         body: JSON.stringify({id : Updateindex}),
       })
@@ -210,47 +186,12 @@ export default function Todo() {
       console.error(err)
     }
   }
-
-  async function Filter() {
-    try {
-        const response = await fetch('http://localhost:8080/time/filter', {method : 'POST',
-          headers: {"Content-Type": "application/json",},
-          body: JSON.stringify({month : fetchMonthFilter, checkState : checkState}), //checkState이 string아니여가지고 타입 안맞아서 백엔드에 넘어갈 때 오류 나올듯 1.activeButton을 써서 백엔드를 불리언으로 갖고오기, 2.checkState를 String으로 바꾸기 1번 한번 해보자
-        })
-        const data = await response.json();
-        if(sortingState === "asc") {
-          data.reverse(); 
-        }
-        if(data.length === 0) {
-          setDBIndex([]);
-        }
-        const indexArray = data.map((item: { id: number }) => item.id);
-        setDBIndex(indexArray);
-        loadData();
-    } catch(err) {
-      console.error(err)
-    }
-  }
-
   useEffect(()=>{
-    Filter()
-  },[sortingState]);
+    loadData()
+  },[sortingState, activeButton]);
 
   
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/time', { method: 'GET' });
-        const data = await response.json();
-        
-        const contentArray = data.map((item: { content: string }) => item.content);
-        
-        setDBContent(contentArray);
-      } catch (error) {
-        console.error('Failed to load data', error);
-      }
-    }
-    loadData();
   }, []);
 
   return(
@@ -267,16 +208,22 @@ export default function Todo() {
           </div>
         </div>
         <div className="flex text-center mx-4 mt-5">
-          <button onClick={() => {setActiveButton('all');
-            console.log("CLICK")
-            }} className={activeButton === 'all' ? onAll : offAll}>ALL
+          <button className={activeButton === 'ALL' ? onAll : offAll} onClick={() => {setActiveButton('ALL');
+            setUpdateLists(true);
+            }}>ALL
           </button>
-          <button onClick={() => setActiveButton('active')} className={activeButton === 'active' ? onActive : offActive}>ACTIVE</button>
-          <button onClick={() => setActiveButton('completed')} className={activeButton === 'completed' ? onComplated : offComplated}>COMPLETED</button>
+          <button className={activeButton === 'ACTIVE' ? onActive : offActive} onClick={() => {setActiveButton('ACTIVE')
+            setUpdateLists(true);
+            }}>ACTIVE
+          </button>
+          <button className={activeButton === 'COMPLETED' ? onComplated : offComplated} onClick={() => {setActiveButton('COMPLETED')
+            setUpdateLists(true);
+          }}>COMPLETED</button>
           <button className="rounded-md bg-black-custom-1 text-white w-20 ml-20 mr-3" onClick={() => {
             toggleAddList()
             setContent("")
-            }}>Add</button>
+            }}>Add
+          </button>
         </div>
         <div className="flex text-center gird place-content-center mt-7 pl-36">
           <div className="flex">
@@ -287,7 +234,6 @@ export default function Todo() {
                 fetchMonthFilter = monthFilter - 1; 
                 if(fetchMonthFilter === 0) fetchMonthFilter = 1;
               }
-              Filter();
               setUpdateLists(true)
             }}>&lt;</button>
             <text className="text-white text-3xl ml-2">{monthFilter}월</text>
@@ -298,7 +244,6 @@ export default function Todo() {
                 fetchMonthFilter = monthFilter + 1;
                 if(fetchMonthFilter === 13) fetchMonthFilter = 12;
               }
-              Filter()
               setUpdateLists(true)
             }}>&gt;</button>
           </div>
