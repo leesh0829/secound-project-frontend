@@ -2,12 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-/*let today = "2024-09-28 01:23:06.850"
-const year : number = 2024;
-const month : number = 9;
-const day : number = 28;
-const hour : number = 1;
-const min : number = 23; */
 let today = new Date();
 const year : number = today.getFullYear();
 const month : number = today.getMonth() + 1;
@@ -32,9 +26,7 @@ export default function Todo() {
   const [content, setContent] = useState("")
   const [addList, setAddList] = useState(false)
   const [monthFilter, setMonthFillter] = useState<number>(month)
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
   const [dbContent, setDBContent] = useState<{id : number, check : number, content : string, clock : Date, month : number}[]>([])
-  const [dbIndex, setDBIndex] = useState<number[]>([])
   const [sortingState, setSortingState] = useState< "desc"| "asc">("desc");
   const [updateLists, setUpdateLists] = useState(false)
   const [toggleBtn, setToggleBtn] = useState(false)
